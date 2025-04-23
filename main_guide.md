@@ -1,11 +1,11 @@
-# Handling /tmp
-Temporary files are written by default to `/tmp`. These need to be periodically cleared or redirected to a personal directory.
+# Handling temporary files
+Temporary files are written by default to `/tmp` or `/var/tmp`. These need to be periodically cleared, e.g. by using `tmpreaper`, or redirected to a personal directory.
 ```
 export TMPDIR=~/tmp
 export TMUX_TMPDIR=~/tmp
 ```
 
-delete files that haven't been accessed in 10 days
+Delete files that haven't been accessed in 10 days
 ```
 sudo find /tmp -type f -atime +10 -delete
 ```
