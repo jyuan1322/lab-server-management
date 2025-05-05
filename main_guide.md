@@ -1,5 +1,5 @@
 # External drive management
-## The mounting process
+## Mounting an external drive
 1. run `sudo parted -l` or `lsblk` to list detected drives.
 ```
 $ sudo parted -l
@@ -45,6 +45,65 @@ sdi                8:128  0  18.2T  0 disk
 1. Mount the drive. The directory `Mercury1_B` should be already created. After creation, you should also chmod 755 that directory so that you don’t need sudo to write to it. Once it’s mounted, you should be able to visit the directory /media/Mercury1_B and read/write to it as usual.
 ```
 sudo mount /dev/sdd1 /media/Mercury1_B
+```
+
+## Mounting an LVM virtual drive
+The 80TB Mercury2 drive has been mounted before, so you can simply run
+```
+sudo mount /dev/vg1/mercury2lv /media/Mercury2LV
+```
+
+If mounting a newly configured virtual drive:
+(Reference: https://www.cyberciti.biz/faq/linux-mount-an-lvm-volume-partition-command/)
+
+`sudo vim /etc/lvm/lvm.conf` --> comment out any filter that’s there
+
+```
+(base) jy1008@ubuntu:~$ sudo vgscan
+ Found volume group "vg1" using metadata type lvm2
+```
+
+```
+(base) jy1008@ubuntu:~$ sudo lvdisplay
+ --- Logical volume ---
+ LV Path        /dev/vg1/mercury2lv
+ LV Name        mercury2lv
+ VG Name        vg1
+ LV UUID        TSj27w-L0QZ-4WB1-2qUs-AMBi-sN6x-jb4Gde
+ LV Write Access    read/write
+ LV Creation host, time ubuntu, 2024-06-19 04:32:51 +0000
+ LV Status       available
+ # open         0
+ LV Size        72.76 TiB
+ Current LE       19073792
+ Segments        4
+ Allocation       inherit
+ Read ahead sectors   auto
+ - currently set to   256
+ Block device      253:0
+```
+
+```
+(base) jy1008@ubuntu:~$ sudo lvs
+ LV     VG Attr    LSize Pool Origin Data% Meta% Move Log Cpy%Sync Convert
+ mercury2lv vg1 -wi-a----- 72.76t
+```
+
+If you encounter this error:
+```
+(base) jy1008@ubuntu:/media$ sudo mount /dev/vg1/mercury2lv /media/Mercury2LV
+mount: /media/Mercury2LV: can't read superblock on /dev/mapper/vg1-mercury2lv.
+```
+https://unix.stackexchange.com/a/697043
+https://unix.stackexchange.com/q/567849
+run the following. This deactivates and reactivates the lvm
+```
+sudo vgchange -a n vg1
+sudo vgchange -a y vg1
+```
+mount command:
+```
+sudo mount /dev/vg1/mercury2lv /media/Mercury2LV
 ```
 
 ## Formatting a new drive for use with Linux
@@ -143,6 +202,16 @@ Filesystem                  Size  Used Avail Use% Mounted on
 /dev/mapper/vg1-mercury2lv   73T  520G   73T   1% /media/Mercury2LV
 ```
 
+# Creation of new users
+```
+sudo groupadd donglab
+sudo useradd -m [uname]
+sudo passwd [uname]
+sudo usermod -aG donglab [uname]
+# sudo usermod -aG sudo [uname] # adding user as sudoer
+# sudo mkhomedir_helper [uname] # if you didn't put -m in useradd
+sudo chsh [uname] -s /bin/bash # use bash as shell
+```
 
 # Transferring files between servers and drives
 This command allows for resuming interrupted transfers. no-perms/owner/group is meant to circumvent any issues with different users/groups when transferring between servers.
@@ -162,8 +231,103 @@ Delete files that haven't been accessed in 10 days
 sudo find /tmp -type f -atime +10 -delete
 ```
 
+# Managing usage limits
+Create the file `/etc/systemd/system/user-.slice.d/limits.conf` with the contents
+```
+[Slice]
+TasksMax=500
+MemoryMax=500G
+CPUQuota=12000%
+```
+* TasksMax controls the total number of processes and is more appropriate for limiting parallel jobs. This has to be a high number: if too low, there is a risk that you cannot ssh into a new session because that would create another process.
+* CPUQuota is reported as percentage of a single core, so CPUQuota=50% means a user can use only 50% of a single core. Setting 12000% means a user can use a maximum of 120 cores full-time, out of a total of 192 on tiger server. So a user can use at most 2/3 of total CPU time.
+
+If making a change to this file, restart the systemd service to apply the changes with the following:
+```
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl restart user-$(id -u).slice
+```
+To verify your current usage, run `systemctl status user-$(id -u).slice` to see your total number of tasks and memory. CPU time is reported in ms, so to see CPU time as a percentage of total capacity, you can also run `sudo systemd-cgtop`.
+
 # Guide to creating modules
 https://researchcomputing.princeton.edu/support/knowledge-base/custom-modules
+
+# Initial server setup
+## Enable firewall
+Reference: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu
+```
+sudo ufw app list
+sudo ufw allow OpenSSH
+suod ufw enable
+sudo ufw status
+```
+
+# Monitoring user usage and activity
+The `acct` library can tell us login times, cpu usage, and command history for all users. Some examples:
+
+* Total usage time per day, per user. Allegedly this is in hours: I think mine is high because I’m using tmux with multiple panels.
+```
+jy743@ubuntu:/mnt/data/referenceGenome$ ac -d -p
+...
+    xd96                 1.52
+    jy743                14.87
+    user                 7.59
+Jul 1 total    23.98
+    jy743                35.24
+    xd96                 0.70
+    user                17.08
+Today  total    53.02
+```
+* Per-user usage in cpu minutes, elapsed time in minutes (re), cpu core usage, average I/O operations, cpu storage integral (kilo-core seconds)
+```
+jy743@ubuntu:~$ sudo sa -m
+                          290    1158.69re       0.07cp         0avio      3270k
+root                      173    1157.36re       0.06cp         0avio      4087k
+jy743                     116       1.33re       0.00cp         0avio      2060k
+man                         1       0.00re       0.00cp         0avio      2340k
+```
+Same output but per-command
+```
+jy743@ubuntu:~$ sudo sa --print-users
+...
+root       0.04 cpu   383616k mem      0 io snap                                                 
+root       0.00 cpu      723k mem      0 io sh                                                   
+root       1.06 cpu    10282k mem      0 io apt                                                  
+jy743      0.00 cpu     2916k mem      0 io sudo            *
+jy743      0.09 cpu     2210k mem      0 io sudo             
+jy743      0.00 cpu      698k mem      0 io ac               
+jy743      0.00 cpu      698k mem      0 io ac               
+jy743      0.00 cpu      698k mem      0 io ac                
+...
+```
+* Command history for all users.
+```
+jy743@ubuntu:~$ sudo lastcomm
+lastcomm               jy743    pts/3      0.00 secs Tue Jul  2 17:29
+sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:29
+sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:29
+lastcomm         S     root     pts/1      0.00 secs Tue Jul  2 17:29
+lastcomm               jy743    pts/3      0.00 secs Tue Jul  2 17:29
+sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:27
+sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:27
+lastcomm         S     root     pts/1      0.00 secs Tue Jul  2 17:27
+sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:27
+sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:27
+lastcomm         S     root     pts/1      0.00 secs Tue Jul  2 17:27
+lastcomm               jy743    pts/3      0.00 secs Tue Jul  2 17:27
+sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:25
+sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:25
+sa               S     root     pts/1      0.00 secs Tue Jul  2 17:25
+sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:25
+```
+Unfortunately, it only lists the first word of the command, so you see a lot of “sudo”. To get a more detailed look, you can open each user’s `~/.bash_history` file, which stores the full command line input for the past 500 lines (this is adjustable*). Note bash_history doesn’t automatically save history for a current open session until that session is closed.
+
+* to have unlimited storage of all of your command history, enter the following lines into your ~/.bashrc file
+```
+HISTSIZE=-1
+HISTFILESIZE=-1
+```
 
 # Using LSF on erisone/eristwo
 Starting an interactive session with 30GB memory
