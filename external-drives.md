@@ -63,8 +63,8 @@ $ sudo mkfs -t xfs /dev/sdd1
 # Formatting a logical volume (LVM)
 
 Resources:\
-https://help.ubuntu.com/community/SettingUpLVM-WithoutACleanInstall
-https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/logical_volume_manager_administration/physvol_admin
+* https://help.ubuntu.com/community/SettingUpLVM-WithoutACleanInstall
+* https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/logical_volume_manager_administration/physvol_admin
 
 1. In /etc/lvm/lvm.conf, change filter to only detect the drives of interest
 ```
