@@ -62,7 +62,7 @@ $ sudo mkfs -t xfs /dev/sdd1
 
 # Formatting a logical volume (LVM)
 
-Resources:
+Resources:\
 https://help.ubuntu.com/community/SettingUpLVM-WithoutACleanInstall
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/logical_volume_manager_administration/physvol_admin
 
