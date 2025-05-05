@@ -1,5 +1,5 @@
-# Handling 80TB servers
-The mounting process:
+# External drive management
+## The mounting process
 1. run `sudo parted -l` or `lsblk` to list detected drives.
 ```
 $ sudo parted -l
@@ -47,7 +47,7 @@ sdi                8:128  0  18.2T  0 disk
 sudo mount /dev/sdd1 /media/Mercury1_B
 ```
 
-# Formatting a new drive for use with Linux
+## Formatting a new drive for use with Linux
 Format the drive according to directions here: https://wiki.docking.org/index.php/Formatting_an_drive_for_use_in_Linux
 
 For the Quad B drive above, it would be the following commands. (Note the disk name `/dev/sdd`. Do not confuse it with another disk; for example `/dev/sdb` is my 14TB drive which is also connected - don’t reformat it by mistake as it will delete the contents).
@@ -60,9 +60,9 @@ $ sudo parted /dev/sdd print
 $ sudo mkfs -t xfs /dev/sdd1
 ```
 
-# Formatting a logical volume (LVM)
+## Formatting a logical volume (LVM)
 
-Resources:\
+Resources:
 * https://help.ubuntu.com/community/SettingUpLVM-WithoutACleanInstall
 * https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/logical_volume_manager_administration/physvol_admin
 
