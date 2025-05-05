@@ -231,6 +231,93 @@ Delete files that haven't been accessed in 10 days
 sudo find /tmp -type f -atime +10 -delete
 ```
 
+# Installing R and other software
+For all new software, I think it’s wise to adhere to the following principles:
+* As much as possible, avoid global installs of software using `sudo apt-get`. We should only install software system-wide if they are well-established, like bedtools or plink. This way, there is less risk of library version conflicts between different users, or errors caused by failed installs (which we have experienced). For most situations, either use an environment manager like conda, or install from source into your local directory.
+* As much as possible, avoid mixing different installation managers, like conda and pip for Python. In the past, I have found that pip tends to have more extensive package selections than conda, so I would install as much as I can with conda, then switch to pip. However, this causes a lot of weird, hard-to-resolve errors down the road because conda and pip don’t talk to one another. What you should do instead is initialize a conda environment, then use pip exclusively: this worked for me in complex installs like configuring pytorch to use the Nvidia GPU.
+
+Here is a short tutorial for installing R on tiger. As in the second bullet point above, we will first install base R using conda, but then we will exclusively use `install.packages()` inside R, ensuring all  installed libraries point to a created conda env. DO NOT run `install.packages()`, then use conda to install further packages: this will likely cause problems down the line.
+
+* Install conda in your home directory.
+Go to https://repo.anaconda.com/archive/ to select the latest version. We have x86_64/amd64 architecture.
+```
+cd ~
+curl -O https://repo.anaconda.com/archive/Anaconda3-2024.06-1-Linux-x86_64.sh
+bash Anaconda3-2024.06-1-Linux-x86_64.sh
+```
+Say “yes” to initializing conda on startup. Now when you log in, your prompt should look like: `(base) [your uid]@ubuntu:~$`.
+
+* Create an empty conda environment to contain your R environment.
+By default, you are in the “base” conda environment, but you should avoid installing there.
+```
+conda create -n "Rdefault"
+conda info -e # view your current environments
+conda activate Rdefault
+```
+Note that in order to use your R environment, you have to activate it when you log in. If that’s annoying to you, you can put `conda activate Rdefault` inside your `~/.bashrc` file. Then upon login it’s automatically activated.
+
+* install R through conda
+```
+conda install -c conda-forge r-essentials
+```
+
+* inside R, check your libPaths() variable. This is the location install.packages ()will install to. Confirm this is inside your newly created conda env.
+```
+R
+> .libPaths()
+[1] "/home/jy743/anaconda3/envs/Rdefault/lib/R/library"
+> install.packages("remotes", repos="https://cran.case.edu/")
+```
+Outside R, confirm that the “remotes” folder appears in `~/anaconda3/envs/Rdefault/lib/R/library`.
+
+* Install Seurat v4 from inside R session:
+```
+remotes::install_version("SeuratObject", "4.1.4", repos = c("https://satijalab.r-universe.dev", getOption("repos")))
+remotes::install_version("Seurat", "4.4.0", repos = c("https://satijalab.r-universe.dev", getOption("repos")))
+```
+
+# Resolve missing Ubuntu package dependency errors
+Example: I am trying to install rstudio through conda. The conda install succeeds, but when I type rstudio at the command line, I get the following error:
+```
+Got keys from plugin meta data ("xcb")
+...
+"/home/jy743/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so"
+QLibraryPrivate::loadPlugin failed on "/home/jy743/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so" : "Cannot load library /home/jy743/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so: (libXi.so.6: cannot open shared object file: No such file or directory)"
+This application failed to start because it could not find or load the Qt platform plugin "xcb"
+in "".
+...
+```
+This type of error either means that the system is missing the required libraries, or your particular user profile isn’t searching in the correct library paths. Here it looks like the problem is `libqxcb.so`
+
+To see the library’s dependencies and their paths, use the `ldd` command:
+```
+(Rstudio_test) jy743@ubuntu:~/anaconda3/envs/Rstudio_test/plugins/platforms$ ldd libqxcb.so 
+        linux-vdso.so.1 (0x00007ffc6e7e6000)
+        libQt5XcbQpa.so.5 => /home/jy743/anaconda3/envs/Rstudio_test/plugins/platforms/./../../lib/libQt5XcbQpa.so.5 (0x00007f96b170e000)
+        libX11-xcb.so.1 => not found
+        libXi.so.6 => not found
+        libdbus-1.so.3 =>
+...
+```
+Here you can see several “not found” entries - those are the source of the problem. In this case, the libraries are simply missing from the system, so we need to install them. Go to the ubuntu packages website (https://packages.ubuntu.com/) to search for the desired library, making sure to keep the version correct. We are using Ubuntu 22.04 with an x86_64 architecture. That will tell you what to install. Alternately, go to stackoverflow.
+
+After installing, use the `dpkg` command to check what libraries were installed.
+```
+sudo apt-get install libx11-xcb1
+dpkg -L libx11-xcb1
+/.
+/usr
+/usr/lib
+/usr/lib/x86_64-linux-gnu
+/usr/lib/x86_64-linux-gnu/libX11-xcb.so.1.0.0
+/usr/share
+/usr/share/doc
+/usr/share/doc/libx11-xcb1
+/usr/share/doc/libx11-xcb1/copyright
+/usr/lib/x86_64-linux-gnu/libX11-xcb.so.1
+/usr/share/doc/libx11-xcb1/changelog.Debian.gz
+```
+
 # Managing usage limits
 Create the file `/etc/systemd/system/user-.slice.d/limits.conf` with the contents
 ```
