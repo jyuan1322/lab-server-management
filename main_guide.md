@@ -1,3 +1,5 @@
+NOTE: This guide is for educational and internal lab use. Paths, names, and IDs have been anonymized.
+
 # External drive management
 ## Mounting an external drive
 1. run `sudo parted -l` or `lsblk` to list detected drives.
@@ -59,12 +61,12 @@ If mounting a newly configured virtual drive:
 `sudo vim /etc/lvm/lvm.conf` --> comment out any filter that’s there
 
 ```
-(base) jy1008@ubuntu:~$ sudo vgscan
+(base) [uname]@ubuntu:~$ sudo vgscan
  Found volume group "vg1" using metadata type lvm2
 ```
 
 ```
-(base) jy1008@ubuntu:~$ sudo lvdisplay
+(base) [uname]@ubuntu:~$ sudo lvdisplay
  --- Logical volume ---
  LV Path        /dev/vg1/mercury2lv
  LV Name        mercury2lv
@@ -84,14 +86,14 @@ If mounting a newly configured virtual drive:
 ```
 
 ```
-(base) jy1008@ubuntu:~$ sudo lvs
+(base) [uname]@ubuntu:~$ sudo lvs
  LV     VG Attr    LSize Pool Origin Data% Meta% Move Log Cpy%Sync Convert
  mercury2lv vg1 -wi-a----- 72.76t
 ```
 
 If you encounter this error:
 ```
-(base) jy1008@ubuntu:/media$ sudo mount /dev/vg1/mercury2lv /media/Mercury2LV
+(base) [uname]@ubuntu:/media$ sudo mount /dev/vg1/mercury2lv /media/Mercury2LV
 mount: /media/Mercury2LV: can't read superblock on /dev/mapper/vg1-mercury2lv.
 ```
 https://unix.stackexchange.com/a/697043
@@ -142,7 +144,7 @@ sudo dd if=/dev/zero of=/dev/sdk bs=512 count=1
 ```
 sudo pvcreate /dev/sdh /dev/sdi /dev/sdj /dev/sdk
 
-(base) jy1008@ubuntu:/$ sudo pvscan
+(base) [uname]@ubuntu:/$ sudo pvscan
  PV /dev/sdh           lvm2 [18.19 TiB]
  PV /dev/sdi           lvm2 [18.19 TiB]
  PV /dev/sdj           lvm2 [18.19 TiB]
@@ -154,7 +156,7 @@ sudo pvcreate /dev/sdh /dev/sdi /dev/sdj /dev/sdk
 ```
 sudo vgcreate vg1 /dev/sdh /dev/sdi /dev/sdj /dev/sdk
 
-(base) jy1008@ubuntu:/$ sudo vgdisplay
+(base) [uname]@ubuntu:/$ sudo vgdisplay
  --- Volume group ---
  VG Name        vg1
  System ID       
@@ -265,7 +267,7 @@ conda install -c conda-forge r-essentials
 ```
 R
 > .libPaths()
-[1] "/home/jy743/anaconda3/envs/Rdefault/lib/R/library"
+[1] "/home/[uname]/anaconda3/envs/Rdefault/lib/R/library"
 > install.packages("remotes", repos="https://cran.case.edu/")
 ```
 Outside R, confirm that the “remotes” folder appears in `~/anaconda3/envs/Rdefault/lib/R/library`.
@@ -281,8 +283,8 @@ Example: I am trying to install rstudio through conda. The conda install succeed
 ```
 Got keys from plugin meta data ("xcb")
 ...
-"/home/jy743/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so"
-QLibraryPrivate::loadPlugin failed on "/home/jy743/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so" : "Cannot load library /home/jy743/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so: (libXi.so.6: cannot open shared object file: No such file or directory)"
+"/home/[uname]/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so"
+QLibraryPrivate::loadPlugin failed on "/home/[uname]/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so" : "Cannot load library /home/[uname]/anaconda3/envs/Rdefault/plugins/platforms/libqxcb.so: (libXi.so.6: cannot open shared object file: No such file or directory)"
 This application failed to start because it could not find or load the Qt platform plugin "xcb"
 in "".
 ...
@@ -291,9 +293,9 @@ This type of error either means that the system is missing the required librarie
 
 To see the library’s dependencies and their paths, use the `ldd` command:
 ```
-(Rstudio_test) jy743@ubuntu:~/anaconda3/envs/Rstudio_test/plugins/platforms$ ldd libqxcb.so 
+(Rstudio_test) [uname]@ubuntu:~/anaconda3/envs/Rstudio_test/plugins/platforms$ ldd libqxcb.so 
         linux-vdso.so.1 (0x00007ffc6e7e6000)
-        libQt5XcbQpa.so.5 => /home/jy743/anaconda3/envs/Rstudio_test/plugins/platforms/./../../lib/libQt5XcbQpa.so.5 (0x00007f96b170e000)
+        libQt5XcbQpa.so.5 => /home/[uname]/anaconda3/envs/Rstudio_test/plugins/platforms/./../../lib/libQt5XcbQpa.so.5 (0x00007f96b170e000)
         libX11-xcb.so.1 => not found
         libXi.so.6 => not found
         libdbus-1.so.3 =>
@@ -355,58 +357,58 @@ The `acct` library can tell us login times, cpu usage, and command history for a
 
 * Total usage time per day, per user. Allegedly this is in hours: I think mine is high because I’m using tmux with multiple panels.
 ```
-jy743@ubuntu:/mnt/data/referenceGenome$ ac -d -p
+[uname]@ubuntu:/mnt/data/referenceGenome$ ac -d -p
 ...
-    xd96                 1.52
-    jy743                14.87
+    [uname]                 1.52
+    [uname]                14.87
     user                 7.59
 Jul 1 total    23.98
-    jy743                35.24
-    xd96                 0.70
+    [uname]                35.24
+    [uname]                 0.70
     user                17.08
 Today  total    53.02
 ```
 * Per-user usage in cpu minutes, elapsed time in minutes (re), cpu core usage, average I/O operations, cpu storage integral (kilo-core seconds)
 ```
-jy743@ubuntu:~$ sudo sa -m
+[uname]@ubuntu:~$ sudo sa -m
                           290    1158.69re       0.07cp         0avio      3270k
 root                      173    1157.36re       0.06cp         0avio      4087k
-jy743                     116       1.33re       0.00cp         0avio      2060k
+[uname]                     116       1.33re       0.00cp         0avio      2060k
 man                         1       0.00re       0.00cp         0avio      2340k
 ```
 Same output but per-command
 ```
-jy743@ubuntu:~$ sudo sa --print-users
+[uname]@ubuntu:~$ sudo sa --print-users
 ...
 root       0.04 cpu   383616k mem      0 io snap                                                 
 root       0.00 cpu      723k mem      0 io sh                                                   
 root       1.06 cpu    10282k mem      0 io apt                                                  
-jy743      0.00 cpu     2916k mem      0 io sudo            *
-jy743      0.09 cpu     2210k mem      0 io sudo             
-jy743      0.00 cpu      698k mem      0 io ac               
-jy743      0.00 cpu      698k mem      0 io ac               
-jy743      0.00 cpu      698k mem      0 io ac                
+[uname]      0.00 cpu     2916k mem      0 io sudo            *
+[uname]      0.09 cpu     2210k mem      0 io sudo             
+[uname]      0.00 cpu      698k mem      0 io ac               
+[uname]      0.00 cpu      698k mem      0 io ac               
+[uname]      0.00 cpu      698k mem      0 io ac                
 ...
 ```
 * Command history for all users.
 ```
-jy743@ubuntu:~$ sudo lastcomm
-lastcomm               jy743    pts/3      0.00 secs Tue Jul  2 17:29
-sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:29
-sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:29
+[uname]@ubuntu:~$ sudo lastcomm
+lastcomm               [uname]    pts/3      0.00 secs Tue Jul  2 17:29
+sudo             S     [uname]    pts/3      0.00 secs Tue Jul  2 17:29
+sudo              F    [uname]    pts/1      0.00 secs Tue Jul  2 17:29
 lastcomm         S     root     pts/1      0.00 secs Tue Jul  2 17:29
-lastcomm               jy743    pts/3      0.00 secs Tue Jul  2 17:29
-sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:27
-sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:27
+lastcomm               [uname]    pts/3      0.00 secs Tue Jul  2 17:29
+sudo             S     [uname]    pts/3      0.00 secs Tue Jul  2 17:27
+sudo              F    [uname]    pts/1      0.00 secs Tue Jul  2 17:27
 lastcomm         S     root     pts/1      0.00 secs Tue Jul  2 17:27
-sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:27
-sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:27
+sudo             S     [uname]    pts/3      0.00 secs Tue Jul  2 17:27
+sudo              F    [uname]    pts/1      0.00 secs Tue Jul  2 17:27
 lastcomm         S     root     pts/1      0.00 secs Tue Jul  2 17:27
-lastcomm               jy743    pts/3      0.00 secs Tue Jul  2 17:27
-sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:25
-sudo              F    jy743    pts/1      0.00 secs Tue Jul  2 17:25
+lastcomm               [uname]    pts/3      0.00 secs Tue Jul  2 17:27
+sudo             S     [uname]    pts/3      0.00 secs Tue Jul  2 17:25
+sudo              F    [uname]    pts/1      0.00 secs Tue Jul  2 17:25
 sa               S     root     pts/1      0.00 secs Tue Jul  2 17:25
-sudo             S     jy743    pts/3      0.00 secs Tue Jul  2 17:25
+sudo             S     [uname]    pts/3      0.00 secs Tue Jul  2 17:25
 ```
 Unfortunately, it only lists the first word of the command, so you see a lot of “sudo”. To get a more detailed look, you can open each user’s `~/.bash_history` file, which stores the full command line input for the past 500 lines (this is adjustable*). Note bash_history doesn’t automatically save history for a current open session until that session is closed.
 
