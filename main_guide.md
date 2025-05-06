@@ -1,4 +1,4 @@
-NOTE: This guide is for educational and internal lab use. Paths, names, and IDs have been anonymized.
+NOTE: This guide is for educational and internal lab use.
 
 # External drive management
 ## Mounting an external drive
@@ -71,7 +71,7 @@ If mounting a newly configured virtual drive:
  LV Path        /dev/vg1/mercury2lv
  LV Name        mercury2lv
  VG Name        vg1
- LV UUID        TSj27w-L0QZ-4WB1-2qUs-AMBi-sN6x-jb4Gde
+ LV UUID        [UUID]
  LV Write Access    read/write
  LV Creation host, time ubuntu, 2024-06-19 04:32:51 +0000
  LV Status       available
@@ -176,7 +176,7 @@ sudo vgcreate vg1 /dev/sdh /dev/sdi /dev/sdj /dev/sdk
  Total PE       19073792
  Alloc PE / Size    0 / 0  
  Free PE / Size    19073792 / 72.76 TiB
- VG UUID        QORAPd-a291-F6b8-vhSc-aUFS-utYV-nENq9G
+ VG UUID        [UUID]
 ```
 
 5. Create the logical volume with 100% of available space in the volume group
